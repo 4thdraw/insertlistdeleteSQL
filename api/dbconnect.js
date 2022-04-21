@@ -18,15 +18,17 @@ router.use(express.json())
 
 
 router.post('/',(req, res) => {
-    var type = req.query.type; 
-    //주소창에 type변수의 값 글쓰기인지, 글읽기인지, 삭제인지, 삽입인지 분리역활 
+
+    var type = req.query.type;  
+    
     var params = req.body; 
-    //object -> router.use(express.json())
+    
     
    console.log('type : ', type ); //object
+  //type역활에 대해서 쓰셔야해요... 깃에 올려서 보여줘야함
+  //주소창에 type변수의 값 글쓰기인지, 글읽기인지, 삭제인지, 삽입인지 분리역활 
 
-
-   if ( type === 'interviewWrite' ) var paramsobj = JSON.parse(params.body);
+   if ( type === 'interviewWrite' || type === 'interviewModify' ) var paramsobj = JSON.parse(params.body);
    else var paramsobj = params.body;
 
    console.log('req.body.body 즉 요청데이터타입 : ', typeof paramsobj ); //object
@@ -34,8 +36,10 @@ router.post('/',(req, res) => {
 
     var query = mybatisMapper.getStatement(
         paramsobj.mapper, paramsobj.mapperid, paramsobj, format );
+
         //sql문 추출해서 query확인하기
         console.log("쿼리문 :", query);
+        
         pool.getConnection(function(err, connection) {
 
             if(err) throw console.log(" DB접속불가 config.js가 틀렸데  : " + err);
