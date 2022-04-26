@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import Accordion from 'react-bootstrap/Accordion';
-import SweetAlert2 from 'react-sweetalert2';
-
+import Swal from 'sweetalert2';
 
 import axios from 'axios';
 
@@ -14,35 +13,63 @@ class Classcomponent extends Component {
             message : '서비스요청을 기다리는 중...',
             interviewData : [], // res.data
             deleteDB : async (no) => {
-                try{
-               
-                    axios.post('/api?type=interviewDelete', {
-                        
-                        body :{ 
-                                no : no,
-                                crud : 'delete',
-                                mapper : this.props.dbinfo.mapper,
-                                mapperid :'interviewDelete'
-                         }
-            
-                    }).then( res => {                 
-                        console.log(res.data) //데이터 콘솔에서 확인            
-                        try{                  
-                            this.setState({ message : '삭제되었습니다. '});
-                            this.state.listDB();
+                Swal.fire({
+                    title: '해당게시글을 삭제하겠습니까?',
+                    text: "취소하시려면 취소버튼을 클릭하세요.",
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    showCancelButton: true,
+                    confirmButtonText: '삭제',
+                    showLoaderOnConfirm: true,
 
-                        }
-                        catch(err){
-                            this.setState({ message : 'DB데이터타입검수바람 ' +  err});
-                        }
-            
-                    }).catch( err => {
-                        this.setState({ message : '접속하였으나 처리하지 못함 ' +  err});
-                    })
-                   }
-                   catch(err){
-                       this.setState({ message : '서버접속불가 ' +  err});
-                   }  
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                        try{
+               
+                            axios.post('/api?type=interviewDelete', {
+                                
+                                body :{ 
+                                        no : no,
+                                        crud : 'delete',
+                                        mapper : this.props.dbinfo.mapper,
+                                        mapperid :'interviewDelete'
+                                 }
+                    
+                            }).then( res => {                 
+                                console.log(res.data) //데이터 콘솔에서 확인            
+                                try{                  
+                                    this.setState({ message : '삭제되었습니다. '}); 
+                                    Swal.fire(
+                                        '삭제되었습니다.',                                        
+                                        'success'
+                                      )
+                                    setTimeout(function(){
+                                        this.state.listDB(); //리스트 삭제적용된 랜더링
+                                    }.bind(this), 1)       
+                                    
+        
+                                }
+                                catch(err){
+                                    this.setState({ message : 'DB데이터타입검수바람 ' +  err});
+                                }
+                    
+                            }).catch( err => {
+                                this.setState({ message : '접속하였으나 처리하지 못함 ' +  err});
+                            })
+                           }
+                           catch(err){
+                               this.setState({ message : '서버접속불가 ' +  err});
+                           } 
+                       
+                    }                  
+                   
+
+
+
+                  });
+
+                
         
             },
             listDB : async () =>{
@@ -75,19 +102,23 @@ class Classcomponent extends Component {
                    } 
 
             }            
-        }
-        
+        }        
     }
-    componentDidMount(){ // 화면에 마우트하고나서 실행
-        this.state.listDB();
+    //this.state가 변경될때마다 랜더링이 되어서 
+    componentDidMount(){ // 화면에 마우트하고나서 실행 
+        this.state.listDB(); // 
     }
+ 
 
     
 
     render() {
         return (
             <Accordion defaultActiveKey="0" flush className={ ' container  py-5'}  tag ='div' >
-                <p>{ this.state.message }</p>
+                <p>{ this.state.message }
+                
+                </p>
+               
                 <h2>{ this.state.interviewData.length > 0 ? this.props.dbinfo.titlenm + "("+ this.state.interviewData.length + ")" : this.state.message } </h2>
                     {
                         

@@ -20,13 +20,8 @@ function App() {
           mapper : 'introduceSQL',
           mapperid : 'interviewModify'
           }
-          }></InterviewInsert>}></Route>   
-
-       
-      </Routes>
-      
-      
-     
+          }></InterviewInsert>}></Route> 
+      </Routes>     
     </div>
   );
 }
