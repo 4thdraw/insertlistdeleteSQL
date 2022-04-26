@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button, Form, FormGroup, Label, Input } from 'reactstrap';
+import Swal from 'sweetalert2';
 import axios from 'axios';
 import $ from 'jquery';
 
@@ -23,8 +24,9 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
 
 
    const submitInterview = async (type, no,  e) => { 
+     
 
-    if( Object.keys(updatano).length > 0){ 
+    if( Object.keys(updatano).length > 0  ){ 
       //절대 이 표현식이 submitInterview 함수 밖에 있으면 안됨
       // useState로 선언된 메서드는 값이 수정될때마다 랜더링이 되니깐
       // message로 제어되는 함수안에 있어야 너무 많은 랜더링이 일어나지않는다.
@@ -41,39 +43,62 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
                       mapper : props.dbinfo.mapper,
                       mapperid :'interviewList'
               }
-          }
-          ).then( (res) => {
-            // 수정의 경우 res.data[0] 데이터레코드가 딱 하나이므로 [0]으로 접근
-            $('#wr_subject').val(res.data[0].subject)
-            $('#wr_content').val(res.data[0].content)
-            //여기서 setMessage 함수실행 절대하면안됨    -> 데이터가 차례대로 들어올때마다 랜더링을 하게 됨     
-            //제이쿼리 선택자로 처리하면 재더링부담은 없다.
-            //value값을 리턴에 직접 처리할 경우 랜더링처리를 해아하므로 
-            //useState를 꼭 써야만한다.!!!
-                
-          }
-          ).catch(
-            err =>{
-              setMessage('서버전송에러'+err)
             }
-          )
+            ).then( (res) => {
+              // 수정의 경우 res.data[0] 데이터레코드가 딱 하나이므로 [0]으로 접근
+              $('#wr_subject').val(res.data[0].subject)
+              $('#wr_content').val(res.data[0].content)
+              //여기서 setMessage 함수실행 절대하면안됨    -> 데이터가 차례대로 들어올때마다 랜더링을 하게 됨     
+              //제이쿼리 선택자로 처리하면 재더링부담은 없다.
+              //value값을 리턴에 직접 처리할 경우 랜더링처리를 해아하므로 
+              //useState를 꼭 써야만한다.!!!
+              
+                  
+            }
+            ).catch(
+              err =>{
+                setMessage('서버전송에러'+err)
+              }
+            )
       }, 1)
+    } //수정데이터가져와서 채우기
+
+    const swalPop = (title) =>{
+      setMessage(title)
+      if(e !== undefined ){
+        
+        setTimeout(() =>{
+
+          Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: title,
+            showConfirmButton: false,
+            timer: 1000
+          })
+          
+
+        }, 1)
+    }
+      
+
     }
      
 
     const  fnValidate = () =>{ 
-      if(!$('#agreeTerm').is(':checked')){ 
-          setMessage("동의하시게나");
+      if(!$('#agreeTerm').is(':checked')){       
+         
+          swalPop('개인정보정책동의바람')
           return false;
       } 
       if($('#wr_subject').val() == '' ){
         $('#wr_subject').focus();
-        setMessage("제목넣기");       
+        swalPop('제목을 넣어주세요')
         return false;
       } 
       if($('#wr_content').val() == '' ){
         $('#wr_content').focus();
-        setMessage("내용넣기");       
+        swalPop('내용을 넣어주세요')      
         return false;
     }                  
       return true;  
@@ -90,7 +115,7 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
 
       try{
           axios.post('/api?type='+type,
-      //아래의 내용을 post전송한다. req.body객체임
+          //아래의 내용을 post전송한다. req.body객체임
           {         
             headers : {
             "Content-Type": `application/json`
@@ -103,15 +128,19 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
 
               
               setNo(null); // 글수정이 완료되었으므로 
+              setMessage('처리완료')
               setTimeout(function(){
 
-                if( contentno == null ){                
-                  $('.formStyle [name]').val('');              
-                  setMessage('노드에 잘 접속되고 전달되었음');  
-                  window.location.reload(); 
-                }else{
+               // if( contentno == null ){   //글쓰기라면              
+                  $('.formStyle [name]').val(''); // 2번랜더링특성상 비워두지 않으면 같은 글 2번 업로드됨             
+                  swalPop('글입력이 완료되었습니다.') 
+                 
+              //  }else{ //글수정이라면 메인으로 라우팅
+               //   swalPop('글수정이 완료되었습니다.')
+                  
                   navigate("/")
-                }
+                  window.location.reload(); 
+              //  }
 
               }, 1)
              
@@ -139,6 +168,7 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
   useEffect((e)=>{  //랜더링이후 실행과 message값이 변경할때마다 실행 
    
       submitInterview(props.dbinfo.botable, contentno , e)
+      
    
   }, [message])
 
@@ -183,7 +213,7 @@ function InsertInterview(props){ //글쓰기와 글수정을 함께 처리하는
           </Label>
         </FormGroup>
         <Button onClick={e => { submitInterview(props.dbinfo.botable,contentno, e) }}>{ contentno !== null ?  '글수정' : '글쓰기'}</Button>
-        
+        { contentno !== null && <Link className='btn btn-info' to='/' >목록</Link>}
       </Form>
       
       <p> { message  }</p>
